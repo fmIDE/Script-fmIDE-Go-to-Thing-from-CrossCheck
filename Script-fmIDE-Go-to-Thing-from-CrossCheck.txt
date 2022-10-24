@@ -1,0 +1,373 @@
+# Script fmIDE-Go to Thing from CrossCheck
+# 
+# 2022-09-28 RW: Version 0.5 More or less compatible with fmIDE v0.21
+# 2022-09-22 RW: Version 0.4 Converted to fmIDE 'Name that Thing' API and most available things implemented
+# 2022-07-05 RW: Version 0.3 Goto Table + catch errors
+# 2022-04-26 RW: Version 0.2 Goto script, script step, layout, layout object or database definition in advanter
+# 2022-01-28 RW: Version 0.1 New
+# 
+Set Error Capture [ On ]
+# 
+# # Script settings
+# 
+Set Variable [ $server_address ; Value: "$" // CUSTOMISE THIS VARIABLE TO YOUR SERVER IF YOU WANT TO BE ABLE TO OPEN FILES DIRECTLY ] 
+Set Variable [ $fmp ; Value: "" // CUSTOMISE THIS VARIABLE IF YOU WANT USERS TO BE ABLE TO SPECIFY THE FMP PROTOCOLL THEMSELVES ] 
+# 
+# # Calculate Input context
+# 
+Set Variable [ $LayoutTableName ; Value: Get ( LayoutTableName ) ] 
+Set Variable [ $ActiveFieldName ; Value: Case( not IsEmpty ( Get ( ActiveFieldName ) ); Get ( ActiveFieldTableName ) & "::" & Get ( ActiveFieldName ) ) ] 
+Set Variable [ $ActiveTableName ; Value: Get ( ActiveFieldTableName ) ] 
+Set Variable [ $ActiveTableName ; Value: Let( [ vTO = $ActiveTableName ]; Case( /* TARGET FILE */ /* TARGET TABLE */ /* TARGET FIELD */ vTO = "tTbl_tTable_tFld.Summary" ; "tTbl_tField.Summary" ; vTO = "tField_tTable_tFldCalc.inAutoEnter" ; "tField_tField_tFldCalc.inAutoEnter" ; vTO = "tF… ] 
+Set Variable [ $$ActiveTableName ; Value: $ActiveTableName ] 
+# 
+# # Calculate Output context
+# 
+Set Variable [ $fmVer ; Value: +GetValue ( Substitute( Get ( ApplicationVersion ) ; [" ";"¶"] ; [".";"¶"] ) ; 2 ) ] 
+Set Variable [ $fmp ; Value: Case( not IsEmpty ( $fmp ) ; $fmp ; "fmp" & Case( $fmVer ≥ 19 ; $fmVer ) ) ] 
+# 
+# # What is our target thing?
+# 
+If [ 0 ] 
+	# 
+Else If [ $LayoutTableName = "tErrorReport" ] 
+	Set Variable [ $file_name ; Value: tErrorReport::FileName ] 
+	If [ 0 ] 
+	Else If [ tErrorReport::tErrRepCatalog = "ScriptStep" ] 
+		Set Variable [ $script_name ; Value: tErrRep_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tErrRep_tScriptStep::ScriptStepNumber ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tAccount" ] 
+	If [ 0 ] 
+		# No Portals
+	Else
+		Set Variable [ $file_name ; Value: tAccount::FileName ] 
+		Set Variable [ $account_name ; Value: tAccount::AccName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tCustomMenuSet" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tCustMenuSet_tLayout" ] 
+		Set Variable [ $file_name ; Value: tCustMenuSet_tLayout::FileName ] 
+		Set Variable [ $layout_name ; Value: tCustMenuSet_tLayout::LytName ] 
+	Else If [ $ActiveTableName = "tCustMenuSet_tScriptStep" ] 
+		Set Variable [ $file_name ; Value: tCustMenuSet_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tCustMenuSet_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tCustMenuSet_tScriptStep::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tCustomMenuSet::FileName ] 
+		Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSet::CMenSetName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tCustomMenu" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tCustomMenuSetList" ] 
+		# Menu -> MenuSet
+		Set Variable [ $file_name ; Value: tCustomMenuSetList::FileName ] 
+		Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSetList::CustMenSetName ] 
+	Else If [ $ActiveTableName = "tCustMenu_tCustMenuItem.Submenu" ] 
+		# Submenu
+		Set Variable [ $file_name ; Value: tCustMenu_tCustMenuItem.Submenu::FileName ] 
+		Set Variable [ $custom_menu_name ; Value: tCustMenu_tCustMenuItem.Submenu::CustMenItemCustMenuName ] 
+	Else
+		Set Variable [ $file_name ; Value: tCustomMenu::FileName ] 
+		Set Variable [ $custom_menu_name ; Value: tCustomMenu::CustMenName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tCustomMenuItem" ] 
+	If [ 0 ] 
+	Else If [ $ActiveFieldName = GetFieldName ( tCustomMenuItem::CustMenuName ) ] 
+		# MenuItem -> Menu
+		Set Variable [ $file_name ; Value: tCustomMenuItem::FileName ] 
+		Set Variable [ $custom_menu_name ; Value: tCustomMenuItem::CustMenuName ] 
+	Else
+		Set Variable [ $file_name ; Value: tCustomMenuItem::FileName ] 
+		Set Variable [ $custom_menu_item_name ; Value: tCustomMenuItem::CustMenuItemName_cu ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tPrivilegeSet" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tPrivSet_tScriptStep" ] 
+		Set Variable [ $file_name ; Value: tPrivSet_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tPrivSet_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tPrivSet_tScriptStep::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tPrivilegeSet::FileName ] 
+		Set Variable [ $privilege_set_name ; Value: tPrivilegeSet::PriSetName ] 
+	End If
+	# 
+	# FIXME - TWO tables????
+Else If [ $LayoutTableName = "tExtendedPrivilegeSet" ] 
+	If [ 0 ] 
+	Else
+		Set Variable [ $file_name ; Value: tExtendedPrivilegeSet::FileName ] 
+		Set Variable [ $extended_privilege_name ; Value: tExtendedPrivilegeSet::ExtPrivName ] 
+	End If
+	# 
+	# FIXME - TWO tables????
+Else If [ $LayoutTableName = "tExtendedPrivilegeList" ] 
+	If [ 0 ] 
+	Else
+		Set Variable [ $file_name ; Value: tExtendedPrivilegeList::FileName ] 
+		Set Variable [ $extended_privilege_name ; Value: tExtendedPrivilegeList::ExtendedPrivilegeSetName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tTheme" ] 
+	If [ 0 ] 
+	Else
+		Set Variable [ $file_name ; Value: tTheme::FileName ] 
+		Set Variable [ $theme_name ; Value: tTheme::ThemeName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tFile" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tFile_tScriptStep" ] 
+		Set Variable [ $file_name ; Value: tFile_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tFile_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tFile_tScriptStep::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tFile::FileName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tTable" ] 
+	If [ 0 ] 
+	Else If [ Get ( ActiveFieldTableName ) = "tScr_tScriptStep" or Get ( ActiveFieldTableName ) = "tScr_tScripts_tScrSt" ] 
+		# Portal ScriptSteps
+		Set Variable [ $file_name ; Value: tScr_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tScr_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tScr_tScriptStep::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tTable::FileName ] 
+		Set Variable [ $table_name ; Value: tTable::TblName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tField" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tField_tScriptStepCalc.Calc" ] 
+		Set Variable [ $file_name ; Value: tField_tScriptStepCalc.Calc::FileName ] 
+		Set Variable [ $script_name ; Value: tField_tScripts_tScrStCalc.Calc_tScrSt::ScrName ] 
+		Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tField_tScripts_tScrStCalc.Calc_tScrSt" ] 
+		Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Calc::FileName ] 
+		Set Variable [ $script_name ; Value: tField_tScripts_tScrStCalc.Calc_tScrSt::ScrName ] 
+		Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tField_tScriptStep_tScrStCalc.Calc" ] 
+		Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Calc::FileName ] 
+		Set Variable [ $script_name ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tField_tScriptStep_tScrStCalc.Field" ] 
+		Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Field::FileName ] 
+		Set Variable [ $script_name ; Value: tField_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tField_tScriptStep.Field" ] 
+		Set Variable [ $file_name ; Value: tField_tScriptStep.Field::FileName ] 
+		Set Variable [ $script_name ; Value: tField_tScriptStep.Field::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tField_tScriptStep.Field::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tField::FileName ] 
+		Set Variable [ $table_name ; Value: tField::TableName_cut ] 
+		Set Variable [ $field_name ; Value: tField::FldName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tFieldCalculation" ] 
+	Set Variable [ $file_name ; Value: tField_tTable::FileName ] 
+	Set Variable [ $table_name ; Value: tField::TableName_cut ] 
+	Set Variable [ $field_name ; Value: tField::FldName ] 
+	# 
+Else If [ $LayoutTableName = "tTO" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tTO_tScriptStep_tScrStCalc.Calc" ] 
+		Set Variable [ $file_name ; Value: tTO_tScriptStep_tScrStCalc.Calc::FileName ] 
+		Set Variable [ $script_name ; Value: tTO_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tTO_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tTO_tScriptStep_tScrStCalc.Field" ] 
+		Set Variable [ $file_name ; Value: tTO_tScriptStep_tScrStCalc.Field::FileName ] 
+		Set Variable [ $script_name ; Value: tTO_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tTO_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tTO_tScriptStep.Table" ] 
+		Set Variable [ $file_name ; Value: tTO_tScriptStep.Table::FileName ] 
+		Set Variable [ $script_name ; Value: tTO_tScriptStep.Table::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tTO_tScriptStep.Table::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tTO_tScriptStep.FieldTO" ] 
+		Set Variable [ $file_name ; Value: tTO_tScriptStep.FieldTO::FileName ] 
+		Set Variable [ $script_name ; Value: tTO_tScriptStep.FieldTO::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tTO_tScriptStep.FieldTO::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tTO::FileName ] 
+		Set Variable [ $table_name ; Value: tTO::TOName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tScript" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tScr_tScriptStep" ] 
+		# Portal ScriptSteps
+		Set Variable [ $file_name ; Value: tScr_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tScr_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tScr_tScriptStep::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tScr_tLayoutObject" ] 
+		# Portal Layout Objects
+		Set Variable [ $file_name ; Value: tScr_tLayoutObject::FileName ] 
+		Set Variable [ $layout_name ; Value: tScr_tLayoutObject::LytName_cut ] 
+		Set Variable [ $object_name ; Value: tScr_tLayoutObject::LytObjName ] 
+	Else
+		Set Variable [ $file_name ; Value: tScript::FileName ] 
+		Set Variable [ $script_name ; Value: tScript::ScrName ] 
+		Set Variable [ $script_step_number ; Value: Case( Get ( ActivePortalRowNumber ) ; Get ( ActivePortalRowNumber ) ) ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tScriptStep" ] 
+	Set Variable [ $file_name ; Value: tScriptStep::FileName ] 
+	Set Variable [ $script_name ; Value: tScriptStep::ScriptName_cut ] 
+	Set Variable [ $script_step_number ; Value: tScriptStep::ScriptStepNumber ] 
+	# 
+Else If [ $LayoutTableName = "tValueList" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tVL_tField.Validation" ] 
+		Set Variable [ $file_name ; Value: tVL_tField.Validation::FileName ] 
+		Set Variable [ $table_name ; Value: tVL_tField.Validation::TableName_cut ] 
+		Set Variable [ $field_name ; Value: tVL_tField.Validation::FldName ] 
+		# 
+	Else If [ $ActiveTableName = "tVL_tLayoutObject" ] 
+		Set Variable [ $file_name ; Value: tVL_tLayoutObject::FileName ] 
+		Set Variable [ $layout_name ; Value: tVL_tLayoutObject::LytName_cut ] 
+		Set Variable [ $object_name ; Value: tVL_tLayoutObject::LytObjName ] 
+		# 
+	Else If [ $ActiveTableName = "tVL_tScriptStep" ] 
+		Set Variable [ $file_name ; Value: tVL_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tVL_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tVL_tScriptStep::ScriptStepNumber ] 
+		# 
+	Else If [ $ActiveTableName = "tVL_tValueList" ] 
+		Set Variable [ $file_name ; Value: tVL_tValueList::FileName ] 
+		Set Variable [ $value_list_name ; Value: tVL_tValueList::VLName ] 
+		# 
+	Else
+		Set Variable [ $file_name ; Value: tValueList::FileName ] 
+		Set Variable [ $value_list_name ; Value: tValueList::VLName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tLayout" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tLyt_tScriptStep" ] 
+		Set Variable [ $file_name ; Value: tLyt_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tLyt_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tLyt_tScriptStep::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tLayout::FileName ] 
+		Set Variable [ $layout_name ; Value: tLayout::LytName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tLayoutObject" ] 
+	Set Variable [ $file_name ; Value: tLayoutObject::FileName ] 
+	Set Variable [ $layout_name ; Value: tLayoutObject::LytName_cut ] 
+	Set Variable [ $object_name ; Value: tLayoutObject::LytObjName ] 
+	# 
+Else If [ $LayoutTableName = "tLayoutPart" ] 
+	Set Variable [ $file_name ; Value: tLayoutPart::FileName ] 
+	Set Variable [ $layout_name ; Value: tLayout::LytName ] 
+	Set Variable [ $layout_part_name ; Value: Case ( not IsEmpty ( tLayoutPart::PartName ) ; tLayoutPart::PartName ; tLayoutPart::PartType ) ] 
+	Set Variable [ $layout_part_number ; Value: Let( [ $$SQL = "SELECT " & "PrimaryKey" & "  FROM " & "tLayoutPart" & " WHERE " & "tLayoutPart.fkSolID" & "=?" & "   AND " & "tLayoutPart.FileName" & "=?" & "   AND " & "tLayoutPart.fkLytID" & "=?" ; vKey = tLayoutPart::PrimaryKey ; vKeys = ExecuteS… ] 
+	# 
+Else If [ $LayoutTableName = "tCustomFunction" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tCF_tScriptStep_tScrStCalc" ] 
+		Set Variable [ $file_name ; Value: tCF_tScriptStep_tScrStCalc::FileName ] 
+		Set Variable [ $script_name ; Value: tCF_tScriptStep_tScrStCalc::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tCF_tScriptStep_tScrStCalc::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tCustomFunction::FileName ] 
+		Set Variable [ $custom_function_name ; Value: tCustomFunction::CfName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tCustomMenuSet" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tCustMenuSet_tLayout" ] 
+		Set Variable [ $file_name ; Value: tCustMenuSet_tLayout::FileName ] 
+		Set Variable [ $layout_name ; Value: tCustMenuSet_tLayout::LytName ] 
+	Else If [ $ActiveTableName = "tCustMenuSet_tScriptStep" ] 
+		Set Variable [ $file_name ; Value: tCustMenuSet_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tCustMenuSet_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tCustMenuSet_tScriptStep::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tCustomMenuSet::FileName ] 
+		Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSet::CMenSetName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tFileReference" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tFileRef_tScriptStep" ] 
+		Set Variable [ $file_name ; Value: tFileRef_tScriptStep::FileName ] 
+		Set Variable [ $script_name ; Value: tFileRef_tScriptStep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tFileRef_tScriptStep_tScrStCalc.Calc" ] 
+		Set Variable [ $file_name ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::FileName ] 
+		Set Variable [ $script_name ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tFileRef_tScriptStep_tScrStCalc.Field" ] 
+		Set Variable [ $file_name ; Value: tFileRef_tScriptStep_tScrStCalc.Field::FileName ] 
+		Set Variable [ $script_name ; Value: tFileRef_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tFileReference::FileName ] 
+		Set Variable [ $external_data_source_name ; Value: tFileReference::FileRefName ] 
+	End If
+	# 
+Else If [ $LayoutTableName = "tVariable" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tVarDep_tScriptStep.Decl" ] 
+		Set Variable [ $file_name ; Value: tVarDep_tScriptStep.Decl::FileName ] 
+		Set Variable [ $script_name ; Value: tVarDep_tScriptStep.Decl::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tVarDep_tScriptStep.Decl::ScriptStepNumber ] 
+	Else If [ $ActiveTableName = "tVar_tScriptStep_tVarDep" ] 
+		Set Variable [ $file_name ; Value: tVar_tScriptStep_tVarDep::FileName ] 
+		Set Variable [ $script_name ; Value: tVar_tScriptStep_tVarDep::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tVar_tScriptStep_tVarDep::ScriptStepNumber ] 
+	Else
+	End If
+	# 
+Else If [ $LayoutTableName = "tObject" ] 
+	If [ 0 ] 
+	Else If [ $ActiveTableName = "tObjDep_tScriptStep.Step" ] 
+		Set Variable [ $file_name ; Value: tObjDep_tScriptStep.Step::FileName ] 
+		Set Variable [ $script_name ; Value: tObjDep_tScriptStep.Step::ScriptName_cut ] 
+		Set Variable [ $script_step_number ; Value: tObjDep_tScriptStep.Step::ScriptStepNumber ] 
+	Else
+		Set Variable [ $file_name ; Value: tObject::FileName ] 
+		Set Variable [ $object_name ; Value: tObject::ObjName ] 
+	End If
+	# 
+	# 
+End If
+# 
+# Remove extension from file name
+Set Variable [ $file_name ; Value: Substitute ( $file_name ; ".fmp12" ; "" ) ] 
+# 
+# ^^^^^
+# 
+# 
+# # Pass the thing to the fmIDE 'Name that thing!' API
+# 
+// # Method 1. Oldest, most straightforward method
+# 
+// Set Variable [ $fmp_url ; Value: $fmp & "://" & $server_address & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & "&$account_id=" & GetAsURLEncoded ( $account_id ) & "&$account_name=" & GetAsURLEncoded ( $account_name ) & "&$account_number=" & GetAsURLEncoded ( $account_numbe…" ] 
+# 
+// # Method 2. Old method using placeholders which leads to too much junk in the fmpurl
+# 
+// Set Variable [ $url_template ; Value: "{{$fmp}}://{{$server_address}}/{{%$file_name%}}" & "?script=fmIDE" & "&$account_id={{%$account_id%}}" & "&$account_name={{%$account_name%}}" & "&$account_number={{%$account_number%}}" & "&$base_table_id={{%$base_table_id%}}" & "&$base_table_name={{%$b…" ] 
+// Insert Text [ Select ; Target: $url_template ; “{{$fmp}}://{{$server_address}}/{{%$file_name%}}?script=fmIDE &$account_id={{%$account_id%}} &$account_name={{%$account_name%}} &$account_number={{%$account_number%}} &$base_table_id={{%$base_table_id%}} &$base_table_name={{%$base_table_name%}} &$base_table_number={{%$base_table_number%}} &$custom_function_id={{%$custom_function_id%}} &$custom_function_name={{%$custom_function_name%}} &$custom_function_number={{%$custom_function_number%}} &$custom_menu_id={{%$custom_menu_id%}} &$custom_menu_item_id={{%$custom_menu_item_id%}} &$custom_menu_item_name={{%$custom_menu_item_name%}} &$custom_menu_item_number={{%$custom_menu_item_number%}} &$custom_menu_name={{%$custom_menu_name%}} &$custom_menu_number={{%$custom_menu_number%}} &$custom_menu_set_id={{%$custom_menu_set_id%}} &$custom_menu_set_name={{%$custom_menu_set_name%}} &$custom_menu_set_number={{%$custom_menu_set_number%}} &$extended_privilege_id={{%$extended_privilege_id%}} &$extended_privilege_name={{%$extended_privilege_name%}} &$extended_privilege_number={{%$extended_privilege_number%}} &$external_data_source_id={{%$external_data_source_id%}} &$external_data_source_name={{%$external_data_source_name%}} &$external_data_source_number={{%$external_data_source_number%}} &$field_id={{%$field_id%}} &$field_name={{%$field_name%}} &$field_number={{%$field_number%}} &$file_name={{%$file_name%}} &$layout_id={{%$layout_id%}} &$layout_name={{%$layout_name%}} &$layout_number={{%$layout_number%}} &$object_id={{%$object_id%}} &$object_name={{%$object_name%}} &$object_number={{%$object_number%}} &$privilege_set_id={{%$privilege_set_id%}} &$privilege_set_name={{%$privilege_set_name%}} &$privilege_set_number={{%$privilege_set_number%}} &$script_id={{%$script_id%}} &$script_name={{%$script_name%}} &$script_name_stub={{%$script_name_stub%}} &$script_number={{%$script_number%}} &$script_step_id={{%$script_step_id%}} &$script_step_name={{%$script_step_name%}} &$script_step_number={{%$script_step_number%}} &$script_step_number_to={{%$script_step_number_to%}} &$table_id={{%$table_id%}} &$table_name={{%$table_name%}} &$table_number={{%$table_number%}} &$theme_id={{%$theme_id%}} &$theme_name={{%$theme_name%}} &$theme_number={{%$theme_number%}} &$t_o_id={{%$t_o_id%}} &$t_o_name={{%$t_o_name%}} &$t_o_number={{%$t_o_number%}} &$value_list_id={{%$value_list_id%}} &$value_list_name={{%$value_list_name%}} &$value_list_number={{%$value_list_number%}} ” ] 
+// Set Variable [ $fmp_url ; Value: Substitute ( $url_template ; ["{{$fmp}}" ; $fmp] ; ["{{$server_address}}" ; $server_address] ; ["{{%$file_name%}}" ; GetAsURLEncoded ( $file_name )] ; ["{{%$account_id%}}" ; GetAsURLEncoded ( $account_id )] ; ["{{%$account_name%}}" ; GetAsURLEncoded ( $a… ] 
+# 
+// # Method 3. More complicated calc, but it produces a simpler url -> better for debugging
+# 
+// Set Variable [ $fmp_url ; Value: $fmp & "://" & $server_address & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & Case( not IsEmpty ( $account_id ) ; "&$account_id=" & GetAsURLEncoded ( $account_id ) ) & Case( not IsEmpty ( $account_name ) ; "&$account_name=" & GetAsURLEncode…" ] 
+# 
+# Method 4. using While to automatically generate the parameters
+# 
+Set Variable [ $fmide_parameter_names ; Value: /* Note: not all parameters are supported - yet. Please check the documentation. */ List( /* thing by name */ "account_name"; "base_table_name"; "custom_function_name"; "custom_menu_item_name"; "custom_menu_name"; "custom_menu_set_name"; "extended_privi… ] 
+Set Variable [ $fmide_parameters ; Value: While([ ¢fmide_parameter_names = $fmide_parameter_names ; ¢result = "" ; ¢i = 1; ¢n = ValueCount( ¢fmide_parameter_names ) ] ; ¢i <= ¢n ; [ ¢fmide_parameter_name = GetValue( ¢fmide_parameter_names ; ¢i ) ; ¢fmide_scriptvar_name = "$" & ¢fmide_paramet… ] 
+Set Variable [ $fmp_url ; Value: Case( not IsEmpty ( $fmp ) ; $fmp ; "fmp" ) & "://" & Case( not IsEmpty( $server_address ) ; $server_address ; "$" ) & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & $fmide_parameters ] 
+# 
+# 
+Open URL [ With dialog: Off ; $fmp_url ] 
+# 
