@@ -10,7 +10,7 @@
 
 # Script "fmIDE-Go to Thing from CrossCheck"
 
-[The `fmIDE-Go to Thing from CrossCheck` script](fmIDE-Go_to_Thing_from_CrossCheck.txt) is the bridge between CrossCheck™ and your database solutions (using the [fmIDE-'Name-that-Thing' API](https://github.com/fmIDE/fmIDE/wiki/fmIDE-'Name-that-Thing'-API))
+[The `fmIDE-Go to Thing from CrossCheck` script](Script-fmIDE-Go-to-Thing-from-CrossCheck.txt) is the bridge between CrossCheck™ and your database solutions (using the [fmIDE-'Name-that-Thing' API](https://github.com/fmIDE/fmIDE/wiki/fmIDE-'Name-that-Thing'-API))
 
 In one click it jumps from the thing you are currently looking at in CrossCheck™ directly to that thing in your database.
 
@@ -41,6 +41,8 @@ In one click it jumps from the thing you are currently looking at in CrossCheck�
    - Navigate to any record in the analysis in CrossCheck™, for example to a script step
    - Press the shortcut key to run the "fmIDE-Go to Thing from CrossCheck" script
    - You suddenly find yourself (more or less) looking at that thing in FileMaker, for example in the Script Workspace editing the script at exactly the script step.
+
+Cool? Find out more about [fmIDE](https://github.com/fmIDE/fmIDE/wiki)
 
 Enjoy & be productive!
 
