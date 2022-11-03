@@ -29,7 +29,7 @@ In one click it jumps from the thing you are currently looking at in CrossCheck�
 
 3. Prepare CrossCheck™ for fmIDE-Integration
    - Paste this script into one of CrossCheck™'s empty custom scripts
-     - Copy the [fmxmlsnippet.xml](fmxmlsnippet.xml) of the script
+     - Copy the [fmxmlsnippet.xml](fmxmlsnippet.xml) of the script steps
      - Convert the xml to FileMaker objects with a tool like fmCheckMate
      - Paste the steps into the script.
 
