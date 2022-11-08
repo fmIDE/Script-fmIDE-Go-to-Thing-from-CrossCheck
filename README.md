@@ -28,9 +28,10 @@ In one click it jumps from the thing you are currently looking at in CrossCheck�
      
 
 3. Prepare CrossCheck™ for fmIDE-Integration
-   - Paste this script into one of CrossCheck™'s empty custom scripts
-     - Copy the [fmxmlsnippet.xml](fmxmlsnippet.xml) of the script steps
-     - Convert the xml to FileMaker objects with a tool like fmCheckMate
+   - Rename one of CrossCheck™'s empty custom scripts to `fmIDE-Go to Thing`
+   - Paste the steps into it
+     - Copy the xml contents of the [fmxmlsnippet.xml](fmxmlsnippet.xml) script steps file
+     - Convert the xml to FileMaker objects with any FM-XML conversion tool like [fmWorkMate's fmCheckMate](https://github.com/mrwatson-de/fmWorkMate/releases/latest), or [fmAutoMate's PaXte function](https://github.com/mrwatson-de/fmAutoMate/releases/latest), or whatever your favourite clipboard conversion tool is.
      - Paste the steps into the script.
 
 3. Perform a CrossCheck™ analysis of your database
@@ -39,7 +40,8 @@ In one click it jumps from the thing you are currently looking at in CrossCheck�
 
 4. Click, 💥 Bang! 👀 Goggle!
    - Navigate to any record in the analysis in CrossCheck™, for example to a script step
-   - Press the shortcut key to run the "fmIDE-Go to Thing from CrossCheck" script
+   - Run the "fmIDE-Go to Thing" script
+     - or press the shortcut key
    - You suddenly find yourself (more or less) looking at that thing in FileMaker, for example in the Script Workspace editing the script at exactly the script step.
 
 Cool? Find out more about [fmIDE](https://github.com/fmIDE/fmIDE/wiki)

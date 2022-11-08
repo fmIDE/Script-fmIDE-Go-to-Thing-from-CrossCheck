@@ -1,17 +1,49 @@
-# Script fmIDE-Go to Thing from CrossCheck
+# fmIDE-Go to Thing in file CrossCheck_Data
+
+# /##
+# Script fmIDE-Go to Thing - See https://github.com/fmIDE/fmIDE/wiki/'fmIDE-Go-to-Thing'-Script ➜🌍 
+# …from CrossCheck - See https://github.com/fmIDE/Script-fmIDE-Go-to-Thing-from-CrossCheck ➜🌍 
 # 
-# 2022-09-28 RW: Version 0.5 More or less compatible with fmIDE v0.21
-# 2022-09-22 RW: Version 0.4 Converted to fmIDE 'Name that Thing' API and most available things implemented
-# 2022-07-05 RW: Version 0.3 Goto Table + catch errors
-# 2022-04-26 RW: Version 0.2 Goto script, script step, layout, layout object or database definition in advanter
-# 2022-01-28 RW: Version 0.1 New
+# Jumps to the thing which is currently in focus using the fmIDE 'Name that Thing' API
+# @see  https://github.com/fmIDE/fmIDE/wiki/fmIDE-'Name-that-Thing'-API ➜🌍 
+# 
+# @param fmide_debug (boolean) - If true fmIDE pauses to allow you to turn on the debugger
+# @param get_fmide_url (boolean) - If true the url will only be returned and not opened. Note: The fmide url is, in fact, always returned.
+# @param server_address (string) - The address of the server. If empty defaults to `$`. Passing a server address makes it possible to jump to closed files. 
+# @param protocol (string) - The protocol to use (fmp/fmp19/claris). If empty defaults to the best protocoll for the current application.
+# 
+# @returns fmide_url (string) - the fmide url. See https://github.com/fmIDE/fmIDE/wiki/fmIDE-'Name-that-Thing'-API-fmp-urls ➜🌍 
+# 
+# @needs fmIDE - https://github.com/fmIDE/fmIDE ➜🌍 
+# 
+# @author https://github.com/mrwatson-de ➜🌍 
+# 
+# 20221108 @mrwatson-de Version 0.6 Fixed #4
+- Add basic parameters including fmide_url return parameter
+# 20220928 @mrwatson-de Version 0.5 More or less compatible with fmIDE v0.21
+# 20220922 @mrwatson-de Version 0.4 Converted to fmIDE 'Name that Thing' API and most available things implemented
+# 20220705 @mrwatson-de Version 0.3 Goto Table + catch errors
+# 20220426 @mrwatson-de Version 0.2 Goto script, script step, layout, layout object or database definition in advanter
+# 20220128 @mrwatson-de Version 0.1 New
+# 
+# #/
 # 
 Set Error Capture [ On ]
 # 
-# # Script settings
+# # Parameters
 # 
-Set Variable [ $server_address ; Value: "$" // CUSTOMISE THIS VARIABLE TO YOUR SERVER IF YOU WANT TO BE ABLE TO OPEN FILES DIRECTLY ] 
-Set Variable [ $fmp ; Value: "" // CUSTOMISE THIS VARIABLE IF YOU WANT USERS TO BE ABLE TO SPECIFY THE FMP PROTOCOLL THEMSELVES ] 
+Set Variable [ $_JSP ; Value: Case ( not IsEmpty( Get ( ScriptParameter ) ) ; Get ( ScriptParameter ) ; "{}" ) ] 
+Set Variable [ $fmide_debug ; Value: JSONGetElement( $_JSP ; "fmide_debug" ) ] 
+Set Variable [ $get_fmide_url ; Value: JSONGetElement( $_JSP ; "get_fmide_url" ) ] 
+Set Variable [ $protocol ; Value: JSONGetElement( $_JSP ; "protocol" ) ] 
+Set Variable [ $server_address ; Value: JSONGetElement( $_JSP ; "server_address" ) ] 
+# 
+# 
+# # Parameter defaults
+# 
+Set Variable [ $application_version ; Value: +GetValue ( Substitute ( Get ( ApplicationVersion ) ; "." ; "¶" ) ; 1 ) ] 
+Set Variable [ $server_address ; Value: Case ( not IsEmpty ( $server_address ) ; $server_address ; "$" ) ] 
+Set Variable [ $protocol ; Value: Case(   not IsEmpty( $protocol ) ; $protocol ;   /* Otherwise use the protocol of the current application */   $application_version < 19 ; "fmp" ;   $application_version < 40 ; "fmp" & $application_version ;   "claris"   ) ] 
 # 
 # # Calculate Input context
 # 
@@ -21,10 +53,6 @@ Set Variable [ $ActiveTableName ; Value: Get ( ActiveFieldTableName ) ]
 Set Variable [ $ActiveTableName ; Value: Let( [ vTO = $ActiveTableName ]; Case( /* TARGET FILE */ /* TARGET TABLE */ /* TARGET FIELD */ vTO = "tTbl_tTable_tFld.Summary" ; "tTbl_tField.Summary" ; vTO = "tField_tTable_tFldCalc.inAutoEnter" ; "tField_tField_tFldCalc.inAutoEnter" ; vTO = "tF… ] 
 Set Variable [ $$ActiveTableName ; Value: $ActiveTableName ] 
 # 
-# # Calculate Output context
-# 
-Set Variable [ $fmVer ; Value: +GetValue ( Substitute( Get ( ApplicationVersion ) ; [" ";"¶"] ; [".";"¶"] ) ; 2 ) ] 
-Set Variable [ $fmp ; Value: Case( not IsEmpty ( $fmp ) ; $fmp ; "fmp" & Case( $fmVer ≥ 19 ; $fmVer ) ) ] 
 # 
 # # What is our target thing?
 # 
@@ -340,34 +368,39 @@ Else If [ $LayoutTableName = "tObject" ]
 	# 
 End If
 # 
-# Remove extension from file name
-Set Variable [ $file_name ; Value: Substitute ( $file_name ; ".fmp12" ; "" ) ] 
-# 
 # ^^^^^
 # 
+# # Pass the thing to the fmIDE 'Name that Thing!' API
 # 
-# # Pass the thing to the fmIDE 'Name that thing!' API
+# @see https://github.com/fmIDE/fmIDE/wiki/fmIDE-'Name-that-Thing'-API
+# 
+# First remove extension from file name, if any
+Set Variable [ $file_name ; Value: Substitute ( $file_name ; [".fmp12" ; ""] ; [".claris" ; ""] ) ] 
 # 
 // # Method 1. Oldest, most straightforward method
 # 
-// Set Variable [ $fmp_url ; Value: $fmp & "://" & $server_address & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & "&$account_id=" & GetAsURLEncoded ( $account_id ) & "&$account_name=" & GetAsURLEncoded ( $account_name ) & "&$account_number=" & GetAsURLEncoded ( $account_numbe…" ] 
+// Set Variable [ $protocol_url ; Value: $protocol & "://" & $server_address & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & "&$account_id=" & GetAsURLEncoded ( $account_id ) & "&$account_name=" & GetAsURLEncoded ( $account_name ) & "&$account_number=" & GetAsURLEncoded ( $account_…" ] 
 # 
 // # Method 2. Old method using placeholders which leads to too much junk in the fmpurl
 # 
-// Set Variable [ $url_template ; Value: "{{$fmp}}://{{$server_address}}/{{%$file_name%}}" & "?script=fmIDE" & "&$account_id={{%$account_id%}}" & "&$account_name={{%$account_name%}}" & "&$account_number={{%$account_number%}}" & "&$base_table_id={{%$base_table_id%}}" & "&$base_table_name={{%$b…" ] 
-// Insert Text [ Select ; Target: $url_template ; “{{$fmp}}://{{$server_address}}/{{%$file_name%}}?script=fmIDE &$account_id={{%$account_id%}} &$account_name={{%$account_name%}} &$account_number={{%$account_number%}} &$base_table_id={{%$base_table_id%}} &$base_table_name={{%$base_table_name%}} &$base_table_number={{%$base_table_number%}} &$custom_function_id={{%$custom_function_id%}} &$custom_function_name={{%$custom_function_name%}} &$custom_function_number={{%$custom_function_number%}} &$custom_menu_id={{%$custom_menu_id%}} &$custom_menu_item_id={{%$custom_menu_item_id%}} &$custom_menu_item_name={{%$custom_menu_item_name%}} &$custom_menu_item_number={{%$custom_menu_item_number%}} &$custom_menu_name={{%$custom_menu_name%}} &$custom_menu_number={{%$custom_menu_number%}} &$custom_menu_set_id={{%$custom_menu_set_id%}} &$custom_menu_set_name={{%$custom_menu_set_name%}} &$custom_menu_set_number={{%$custom_menu_set_number%}} &$extended_privilege_id={{%$extended_privilege_id%}} &$extended_privilege_name={{%$extended_privilege_name%}} &$extended_privilege_number={{%$extended_privilege_number%}} &$external_data_source_id={{%$external_data_source_id%}} &$external_data_source_name={{%$external_data_source_name%}} &$external_data_source_number={{%$external_data_source_number%}} &$field_id={{%$field_id%}} &$field_name={{%$field_name%}} &$field_number={{%$field_number%}} &$file_name={{%$file_name%}} &$layout_id={{%$layout_id%}} &$layout_name={{%$layout_name%}} &$layout_number={{%$layout_number%}} &$object_id={{%$object_id%}} &$object_name={{%$object_name%}} &$object_number={{%$object_number%}} &$privilege_set_id={{%$privilege_set_id%}} &$privilege_set_name={{%$privilege_set_name%}} &$privilege_set_number={{%$privilege_set_number%}} &$script_id={{%$script_id%}} &$script_name={{%$script_name%}} &$script_name_stub={{%$script_name_stub%}} &$script_number={{%$script_number%}} &$script_step_id={{%$script_step_id%}} &$script_step_name={{%$script_step_name%}} &$script_step_number={{%$script_step_number%}} &$script_step_number_to={{%$script_step_number_to%}} &$table_id={{%$table_id%}} &$table_name={{%$table_name%}} &$table_number={{%$table_number%}} &$theme_id={{%$theme_id%}} &$theme_name={{%$theme_name%}} &$theme_number={{%$theme_number%}} &$t_o_id={{%$t_o_id%}} &$t_o_name={{%$t_o_name%}} &$t_o_number={{%$t_o_number%}} &$value_list_id={{%$value_list_id%}} &$value_list_name={{%$value_list_name%}} &$value_list_number={{%$value_list_number%}} ” ] 
-// Set Variable [ $fmp_url ; Value: Substitute ( $url_template ; ["{{$fmp}}" ; $fmp] ; ["{{$server_address}}" ; $server_address] ; ["{{%$file_name%}}" ; GetAsURLEncoded ( $file_name )] ; ["{{%$account_id%}}" ; GetAsURLEncoded ( $account_id )] ; ["{{%$account_name%}}" ; GetAsURLEncoded ( $a… ] 
+// Set Variable [ $url_template ; Value: "{{$protocol}}://{{$server_address}}/{{%$file_name%}}" & "?script=fmIDE" & "&$account_id={{%$account_id%}}" & "&$account_name={{%$account_name%}}" & "&$account_number={{%$account_number%}}" & "&$base_table_id={{%$base_table_id%}}" & "&$base_table_name=…" ] 
+// Insert Text [ Select ; Target: $url_template ; “{{$protocol}}://{{$server_address}}/{{%$file_name%}}?script=fmIDE &$account_id={{%$account_id%}} &$account_name={{%$account_name%}} &$account_number={{%$account_number%}} &$base_table_id={{%$base_table_id%}} &$base_table_name={{%$base_table_name%}} &$base_table_number={{%$base_table_number%}} &$custom_function_id={{%$custom_function_id%}} &$custom_function_name={{%$custom_function_name%}} &$custom_function_number={{%$custom_function_number%}} &$custom_menu_id={{%$custom_menu_id%}} &$custom_menu_item_id={{%$custom_menu_item_id%}} &$custom_menu_item_name={{%$custom_menu_item_name%}} &$custom_menu_item_number={{%$custom_menu_item_number%}} &$custom_menu_name={{%$custom_menu_name%}} &$custom_menu_number={{%$custom_menu_number%}} &$custom_menu_set_id={{%$custom_menu_set_id%}} &$custom_menu_set_name={{%$custom_menu_set_name%}} &$custom_menu_set_number={{%$custom_menu_set_number%}} &$extended_privilege_id={{%$extended_privilege_id%}} &$extended_privilege_name={{%$extended_privilege_name%}} &$extended_privilege_number={{%$extended_privilege_number%}} &$external_data_source_id={{%$external_data_source_id%}} &$external_data_source_name={{%$external_data_source_name%}} &$external_data_source_number={{%$external_data_source_number%}} &$field_id={{%$field_id%}} &$field_name={{%$field_name%}} &$field_number={{%$field_number%}} &$file_name={{%$file_name%}} &$layout_id={{%$layout_id%}} &$layout_name={{%$layout_name%}} &$layout_number={{%$layout_number%}} &$object_id={{%$object_id%}} &$object_name={{%$object_name%}} &$object_number={{%$object_number%}} &$privilege_set_id={{%$privilege_set_id%}} &$privilege_set_name={{%$privilege_set_name%}} &$privilege_set_number={{%$privilege_set_number%}} &$script_id={{%$script_id%}} &$script_name={{%$script_name%}} &$script_name_stub={{%$script_name_stub%}} &$script_number={{%$script_number%}} &$script_step_id={{%$script_step_id%}} &$script_step_name={{%$script_step_name%}} &$script_step_number={{%$script_step_number%}} &$script_step_number_to={{%$script_step_number_to%}} &$table_id={{%$table_id%}} &$table_name={{%$table_name%}} &$table_number={{%$table_number%}} &$theme_id={{%$theme_id%}} &$theme_name={{%$theme_name%}} &$theme_number={{%$theme_number%}} &$t_o_id={{%$t_o_id%}} &$t_o_name={{%$t_o_name%}} &$t_o_number={{%$t_o_number%}} &$value_list_id={{%$value_list_id%}} &$value_list_name={{%$value_list_name%}} &$value_list_number={{%$value_list_number%}} ” ] 
+// Set Variable [ $protocol_url ; Value: Substitute ( $url_template ; ["{{$protocol}}" ; $protocol] ; ["{{$server_address}}" ; $server_address] ; ["{{%$file_name%}}" ; GetAsURLEncoded ( $file_name )] ; ["{{%$account_id%}}" ; GetAsURLEncoded ( $account_id )] ; ["{{%$account_name%}}" ; GetAsURLEn… ] 
 # 
 // # Method 3. More complicated calc, but it produces a simpler url -> better for debugging
 # 
-// Set Variable [ $fmp_url ; Value: $fmp & "://" & $server_address & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & Case( not IsEmpty ( $account_id ) ; "&$account_id=" & GetAsURLEncoded ( $account_id ) ) & Case( not IsEmpty ( $account_name ) ; "&$account_name=" & GetAsURLEncode…" ] 
+// Set Variable [ $protocol_url ; Value: $protocol & "://" & $server_address & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & Case( not IsEmpty ( $account_id ) ; "&$account_id=" & GetAsURLEncoded ( $account_id ) ) & Case( not IsEmpty ( $account_name ) ; "&$account_name=" & GetAsURLE…" ] 
 # 
 # Method 4. using While to automatically generate the parameters
+# Note: not all parameters are supported - yet. Please check the documentation.
 # 
-Set Variable [ $fmide_parameter_names ; Value: /* Note: not all parameters are supported - yet. Please check the documentation. */ List( /* thing by name */ "account_name"; "base_table_name"; "custom_function_name"; "custom_menu_item_name"; "custom_menu_name"; "custom_menu_set_name"; "extended_privi… ] 
+Set Variable [ $fmide_parameter_names ; Value: List( /* thing by name */ "account_name"; "base_table_name"; "custom_function_name"; "custom_menu_item_name"; "custom_menu_name"; "custom_menu_set_name"; "extended_privilege_name"; "external_data_source_name"; "field_name"; "file_name"; "layout_field_na… ] 
 Set Variable [ $fmide_parameters ; Value: While([ ¢fmide_parameter_names = $fmide_parameter_names ; ¢result = "" ; ¢i = 1; ¢n = ValueCount( ¢fmide_parameter_names ) ] ; ¢i <= ¢n ; [ ¢fmide_parameter_name = GetValue( ¢fmide_parameter_names ; ¢i ) ; ¢fmide_scriptvar_name = "$" & ¢fmide_paramet… ] 
-Set Variable [ $fmp_url ; Value: Case( not IsEmpty ( $fmp ) ; $fmp ; "fmp" ) & "://" & Case( not IsEmpty( $server_address ) ; $server_address ; "$" ) & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & $fmide_parameters ] 
+Set Variable [ $fmide_url ; Value: $protocol & "://" & $server_address & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & $fmide_parameters ] 
 # 
+If [ not $get_fmide_url ] 
+	Open URL [ With dialog: Off ; $fmide_url ] 
+End If
 # 
-Open URL [ With dialog: Off ; $fmp_url ] 
+Exit Script [ Text Result: JSONSetElement ( "{}" ; "fmide_url" ; $fmide_url ; JSONString ) ] 
 # 
