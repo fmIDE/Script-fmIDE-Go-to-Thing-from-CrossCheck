@@ -1,11 +1,15 @@
 # fmIDE-Go to Thing in file CrossCheck_Data
 
 # /##
-# Script fmIDE-Go to Thing - See https://github.com/fmIDE/fmIDE/wiki/'fmIDE-Go-to-Thing'-Script ➜🌍 
-# …from CrossCheck - See https://github.com/fmIDE/Script-fmIDE-Go-to-Thing-from-CrossCheck ➜🌍 
+# Script fmIDE-Go to Thing
 # 
 # Jumps to the thing which is currently in focus using the fmIDE 'Name that Thing' API
-# @see  https://github.com/fmIDE/fmIDE/wiki/fmIDE-'Name-that-Thing'-API ➜🌍 
+# 
+# @see the fmIDE-'Name-that-Thing'-API Wiki page for more - https://github.com/fmIDE/fmIDE/wiki/fmIDE-'Name-that-Thing'-API ➜🌍 
+# @see `Script fmIDE-Go to Thing Wiki page` - https://github.com/fmIDE/fmIDE/wiki/'fmIDE-Go-to-Thing'-Script ➜🌍 
+# @see `Script fmIDE-Go to Thing from CrossCheck` Wiki page - https://github.com/fmIDE/Script-fmIDE-Go-to-Thing-from-CrossCheck ➜🌍 
+# @see the fmxmlsnippet.xml file code page - https://github.com/fmIDE/Script-fmIDE-Go-to-Thing-from-CrossCheck/blob/main/fmxmlsnippet.xml ➜🌍 
+# @see the fmxmlsnippet.xml raw file page - https://raw.githubusercontent.com/fmIDE/Script-fmIDE-Go-to-Thing-from-CrossCheck/main/fmxmlsnippet.xml ➜🌍 
 # 
 # @param fmide_debug (boolean) - If true fmIDE pauses to allow you to turn on the debugger
 # @param get_fmide_url (boolean) - If true the url will only be returned and not opened. Note: The fmide url is, in fact, always returned.
@@ -18,6 +22,14 @@
 # 
 # @author https://github.com/mrwatson-de ➜🌍 
 # 
+# 20240104 @mrwatson-de Version 0.8
+- Added `Table > Script Step Calculation`
+- Added `Table > Script Step Target Field`
+- Improved comment doc and added link to raw file
+# 20230509 @mrwatson-de Version 0.7.1
+- Added dialog to report call-error
+# 20230314 @mrwatson-de Version 0.7
+- Added Field > LayoutObjects
 # 20221108 @mrwatson-de Version 0.6 Fixed #4
 - Add basic parameters including fmide_url return parameter
 # 20220928 @mrwatson-de Version 0.5 More or less compatible with fmIDE v0.21
@@ -57,315 +69,332 @@ Set Variable [ $$ActiveTableName ; Value: $ActiveTableName ]
 # # What is our target thing?
 # 
 If [ 0 ] 
-	# 
+# 
 Else If [ $LayoutTableName = "tErrorReport" ] 
-	Set Variable [ $file_name ; Value: tErrorReport::FileName ] 
-	If [ 0 ] 
-	Else If [ tErrorReport::tErrRepCatalog = "ScriptStep" ] 
-		Set Variable [ $script_name ; Value: tErrRep_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tErrRep_tScriptStep::ScriptStepNumber ] 
-	End If
-	# 
+Set Variable [ $file_name ; Value: tErrorReport::FileName ] 
+If [ 0 ] 
+Else If [ tErrorReport::tErrRepCatalog = "ScriptStep" ] 
+Set Variable [ $script_name ; Value: tErrRep_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tErrRep_tScriptStep::ScriptStepNumber ] 
+End If
+# 
 Else If [ $LayoutTableName = "tAccount" ] 
-	If [ 0 ] 
-		# No Portals
-	Else
-		Set Variable [ $file_name ; Value: tAccount::FileName ] 
-		Set Variable [ $account_name ; Value: tAccount::AccName ] 
-	End If
-	# 
+If [ 0 ] 
+# No Portals
+Else
+Set Variable [ $file_name ; Value: tAccount::FileName ] 
+Set Variable [ $account_name ; Value: tAccount::AccName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tCustomMenuSet" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tCustMenuSet_tLayout" ] 
-		Set Variable [ $file_name ; Value: tCustMenuSet_tLayout::FileName ] 
-		Set Variable [ $layout_name ; Value: tCustMenuSet_tLayout::LytName ] 
-	Else If [ $ActiveTableName = "tCustMenuSet_tScriptStep" ] 
-		Set Variable [ $file_name ; Value: tCustMenuSet_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tCustMenuSet_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tCustMenuSet_tScriptStep::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tCustomMenuSet::FileName ] 
-		Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSet::CMenSetName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tCustMenuSet_tLayout" ] 
+Set Variable [ $file_name ; Value: tCustMenuSet_tLayout::FileName ] 
+Set Variable [ $layout_name ; Value: tCustMenuSet_tLayout::LytName ] 
+Else If [ $ActiveTableName = "tCustMenuSet_tScriptStep" ] 
+Set Variable [ $file_name ; Value: tCustMenuSet_tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tCustMenuSet_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tCustMenuSet_tScriptStep::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tCustomMenuSet::FileName ] 
+Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSet::CMenSetName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tCustomMenu" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tCustomMenuSetList" ] 
-		# Menu -> MenuSet
-		Set Variable [ $file_name ; Value: tCustomMenuSetList::FileName ] 
-		Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSetList::CustMenSetName ] 
-	Else If [ $ActiveTableName = "tCustMenu_tCustMenuItem.Submenu" ] 
-		# Submenu
-		Set Variable [ $file_name ; Value: tCustMenu_tCustMenuItem.Submenu::FileName ] 
-		Set Variable [ $custom_menu_name ; Value: tCustMenu_tCustMenuItem.Submenu::CustMenItemCustMenuName ] 
-	Else
-		Set Variable [ $file_name ; Value: tCustomMenu::FileName ] 
-		Set Variable [ $custom_menu_name ; Value: tCustomMenu::CustMenName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tCustomMenuSetList" ] 
+# Menu -> MenuSet
+Set Variable [ $file_name ; Value: tCustomMenuSetList::FileName ] 
+Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSetList::CustMenSetName ] 
+Else If [ $ActiveTableName = "tCustMenu_tCustMenuItem.Submenu" ] 
+# Submenu
+Set Variable [ $file_name ; Value: tCustMenu_tCustMenuItem.Submenu::FileName ] 
+Set Variable [ $custom_menu_name ; Value: tCustMenu_tCustMenuItem.Submenu::CustMenItemCustMenuName ] 
+Else
+Set Variable [ $file_name ; Value: tCustomMenu::FileName ] 
+Set Variable [ $custom_menu_name ; Value: tCustomMenu::CustMenName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tCustomMenuItem" ] 
-	If [ 0 ] 
-	Else If [ $ActiveFieldName = GetFieldName ( tCustomMenuItem::CustMenuName ) ] 
-		# MenuItem -> Menu
-		Set Variable [ $file_name ; Value: tCustomMenuItem::FileName ] 
-		Set Variable [ $custom_menu_name ; Value: tCustomMenuItem::CustMenuName ] 
-	Else
-		Set Variable [ $file_name ; Value: tCustomMenuItem::FileName ] 
-		Set Variable [ $custom_menu_item_name ; Value: tCustomMenuItem::CustMenuItemName_cu ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveFieldName = GetFieldName ( tCustomMenuItem::CustMenuName ) ] 
+# MenuItem -> Menu
+Set Variable [ $file_name ; Value: tCustomMenuItem::FileName ] 
+Set Variable [ $custom_menu_name ; Value: tCustomMenuItem::CustMenuName ] 
+Else
+Set Variable [ $file_name ; Value: tCustomMenuItem::FileName ] 
+Set Variable [ $custom_menu_item_name ; Value: tCustomMenuItem::CustMenuItemName_cu ] 
+End If
+# 
 Else If [ $LayoutTableName = "tPrivilegeSet" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tPrivSet_tScriptStep" ] 
-		Set Variable [ $file_name ; Value: tPrivSet_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tPrivSet_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tPrivSet_tScriptStep::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tPrivilegeSet::FileName ] 
-		Set Variable [ $privilege_set_name ; Value: tPrivilegeSet::PriSetName ] 
-	End If
-	# 
-	# FIXME - TWO tables????
+If [ 0 ] 
+Else If [ $ActiveTableName = "tPrivSet_tScriptStep" ] 
+Set Variable [ $file_name ; Value: tPrivSet_tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tPrivSet_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tPrivSet_tScriptStep::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tPrivilegeSet::FileName ] 
+Set Variable [ $privilege_set_name ; Value: tPrivilegeSet::PriSetName ] 
+End If
+# 
+# FIXME - TWO tables????
 Else If [ $LayoutTableName = "tExtendedPrivilegeSet" ] 
-	If [ 0 ] 
-	Else
-		Set Variable [ $file_name ; Value: tExtendedPrivilegeSet::FileName ] 
-		Set Variable [ $extended_privilege_name ; Value: tExtendedPrivilegeSet::ExtPrivName ] 
-	End If
-	# 
-	# FIXME - TWO tables????
+If [ 0 ] 
+Else
+Set Variable [ $file_name ; Value: tExtendedPrivilegeSet::FileName ] 
+Set Variable [ $extended_privilege_name ; Value: tExtendedPrivilegeSet::ExtPrivName ] 
+End If
+# 
+# FIXME - TWO tables????
 Else If [ $LayoutTableName = "tExtendedPrivilegeList" ] 
-	If [ 0 ] 
-	Else
-		Set Variable [ $file_name ; Value: tExtendedPrivilegeList::FileName ] 
-		Set Variable [ $extended_privilege_name ; Value: tExtendedPrivilegeList::ExtendedPrivilegeSetName ] 
-	End If
-	# 
+If [ 0 ] 
+Else
+Set Variable [ $file_name ; Value: tExtendedPrivilegeList::FileName ] 
+Set Variable [ $extended_privilege_name ; Value: tExtendedPrivilegeList::ExtendedPrivilegeSetName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tTheme" ] 
-	If [ 0 ] 
-	Else
-		Set Variable [ $file_name ; Value: tTheme::FileName ] 
-		Set Variable [ $theme_name ; Value: tTheme::ThemeName ] 
-	End If
-	# 
+If [ 0 ] 
+Else
+Set Variable [ $file_name ; Value: tTheme::FileName ] 
+Set Variable [ $theme_name ; Value: tTheme::ThemeName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tFile" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tFile_tScriptStep" ] 
-		Set Variable [ $file_name ; Value: tFile_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tFile_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tFile_tScriptStep::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tFile::FileName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tFile_tScriptStep" ] 
+Set Variable [ $file_name ; Value: tFile_tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tFile_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tFile_tScriptStep::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tFile::FileName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tTable" ] 
-	If [ 0 ] 
-	Else If [ Get ( ActiveFieldTableName ) = "tScr_tScriptStep" or Get ( ActiveFieldTableName ) = "tScr_tScripts_tScrSt" ] 
-		# Portal ScriptSteps
-		Set Variable [ $file_name ; Value: tScr_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tScr_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tScr_tScriptStep::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tTable::FileName ] 
-		Set Variable [ $table_name ; Value: tTable::TblName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tTbl_tScript_tScrStCalc.Field" or $ActiveTableName = "tTbl_tScriptStep_tScrStCalc.Field" ] 
+Set Variable [ $file_name ; Value: tTbl_tScript_tScrStCalc.Field::FileName ] 
+Set Variable [ $script_name ; Value: tTbl_tScript_tScrStCalc.Field::ScrName ] 
+Set Variable [ $script_step_number ; Value: tTbl_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tTbl_tScriptStepCalc.Calc" or $ActiveTableName = "tTbl_tScriptStep_tScrStCalc.Calc" ] 
+Set Variable [ $file_name ; Value: tTbl_tScriptStepCalc.Calc::FileName ] 
+Set Variable [ $script_name ; Value: tTbl_tScriptStepCalc.Calc::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tTbl_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tTable::FileName ] 
+Set Variable [ $table_name ; Value: tTable::TblName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tField" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tField_tScriptStepCalc.Calc" ] 
-		Set Variable [ $file_name ; Value: tField_tScriptStepCalc.Calc::FileName ] 
-		Set Variable [ $script_name ; Value: tField_tScripts_tScrStCalc.Calc_tScrSt::ScrName ] 
-		Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tField_tScripts_tScrStCalc.Calc_tScrSt" ] 
-		Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Calc::FileName ] 
-		Set Variable [ $script_name ; Value: tField_tScripts_tScrStCalc.Calc_tScrSt::ScrName ] 
-		Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tField_tScriptStep_tScrStCalc.Calc" ] 
-		Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Calc::FileName ] 
-		Set Variable [ $script_name ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tField_tScriptStep_tScrStCalc.Field" ] 
-		Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Field::FileName ] 
-		Set Variable [ $script_name ; Value: tField_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tField_tScriptStep.Field" ] 
-		Set Variable [ $file_name ; Value: tField_tScriptStep.Field::FileName ] 
-		Set Variable [ $script_name ; Value: tField_tScriptStep.Field::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tField_tScriptStep.Field::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tField::FileName ] 
-		Set Variable [ $table_name ; Value: tField::TableName_cut ] 
-		Set Variable [ $field_name ; Value: tField::FldName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tField_tScriptStepCalc.Calc" ] 
+Set Variable [ $file_name ; Value: tField_tScriptStepCalc.Calc::FileName ] 
+Set Variable [ $script_name ; Value: tField_tScripts_tScrStCalc.Calc_tScrSt::ScrName ] 
+Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tField_tScripts_tScrStCalc.Calc_tScrSt" ] 
+Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Calc::FileName ] 
+Set Variable [ $script_name ; Value: tField_tScripts_tScrStCalc.Calc_tScrSt::ScrName ] 
+Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tField_tScriptStep_tScrStCalc.Calc" ] 
+Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Calc::FileName ] 
+Set Variable [ $script_name ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tField_tScriptStep_tScrStCalc.Field" ] 
+Set Variable [ $file_name ; Value: tField_tScriptStep_tScrStCalc.Field::FileName ] 
+Set Variable [ $script_name ; Value: tField_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tField_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tField_tScriptStep.Field" ] 
+Set Variable [ $file_name ; Value: tField_tScriptStep.Field::FileName ] 
+Set Variable [ $script_name ; Value: tField_tScriptStep.Field::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tField_tScriptStep.Field::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tField_tLayoutObject" ] 
+Set Variable [ $file_name ; Value: tField_tLayoutObject::FileName ] 
+Set Variable [ $layout_name ; Value: tField_tLayoutObject::LytName_cut ] 
+Set Variable [ $object_name ; Value: tField_tLayoutObject::LytObjName ] 
+Else
+Set Variable [ $file_name ; Value: tField::FileName ] 
+Set Variable [ $table_name ; Value: tField::TableName_cut ] 
+Set Variable [ $field_name ; Value: tField::FldName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tFieldCalculation" ] 
-	Set Variable [ $file_name ; Value: tField_tTable::FileName ] 
-	Set Variable [ $table_name ; Value: tField::TableName_cut ] 
-	Set Variable [ $field_name ; Value: tField::FldName ] 
-	# 
+Set Variable [ $file_name ; Value: tField_tTable::FileName ] 
+Set Variable [ $table_name ; Value: tField::TableName_cut ] 
+Set Variable [ $field_name ; Value: tField::FldName ] 
+# 
 Else If [ $LayoutTableName = "tTO" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tTO_tScriptStep_tScrStCalc.Calc" ] 
-		Set Variable [ $file_name ; Value: tTO_tScriptStep_tScrStCalc.Calc::FileName ] 
-		Set Variable [ $script_name ; Value: tTO_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tTO_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tTO_tScriptStep_tScrStCalc.Field" ] 
-		Set Variable [ $file_name ; Value: tTO_tScriptStep_tScrStCalc.Field::FileName ] 
-		Set Variable [ $script_name ; Value: tTO_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tTO_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tTO_tScriptStep.Table" ] 
-		Set Variable [ $file_name ; Value: tTO_tScriptStep.Table::FileName ] 
-		Set Variable [ $script_name ; Value: tTO_tScriptStep.Table::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tTO_tScriptStep.Table::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tTO_tScriptStep.FieldTO" ] 
-		Set Variable [ $file_name ; Value: tTO_tScriptStep.FieldTO::FileName ] 
-		Set Variable [ $script_name ; Value: tTO_tScriptStep.FieldTO::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tTO_tScriptStep.FieldTO::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tTO::FileName ] 
-		Set Variable [ $table_name ; Value: tTO::TOName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tTO_tScriptStep_tScrStCalc.Calc" ] 
+Set Variable [ $file_name ; Value: tTO_tScriptStep_tScrStCalc.Calc::FileName ] 
+Set Variable [ $script_name ; Value: tTO_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tTO_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tTO_tScriptStep_tScrStCalc.Field" ] 
+Set Variable [ $file_name ; Value: tTO_tScriptStep_tScrStCalc.Field::FileName ] 
+Set Variable [ $script_name ; Value: tTO_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tTO_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tTO_tScriptStep.Table" ] 
+Set Variable [ $file_name ; Value: tTO_tScriptStep.Table::FileName ] 
+Set Variable [ $script_name ; Value: tTO_tScriptStep.Table::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tTO_tScriptStep.Table::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tTO_tScriptStep.FieldTO" ] 
+Set Variable [ $file_name ; Value: tTO_tScriptStep.FieldTO::FileName ] 
+Set Variable [ $script_name ; Value: tTO_tScriptStep.FieldTO::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tTO_tScriptStep.FieldTO::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tTO::FileName ] 
+Set Variable [ $table_name ; Value: tTO::TOName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tScript" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tScr_tScriptStep" ] 
-		# Portal ScriptSteps
-		Set Variable [ $file_name ; Value: tScr_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tScr_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tScr_tScriptStep::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tScr_tLayoutObject" ] 
-		# Portal Layout Objects
-		Set Variable [ $file_name ; Value: tScr_tLayoutObject::FileName ] 
-		Set Variable [ $layout_name ; Value: tScr_tLayoutObject::LytName_cut ] 
-		Set Variable [ $object_name ; Value: tScr_tLayoutObject::LytObjName ] 
-	Else
-		Set Variable [ $file_name ; Value: tScript::FileName ] 
-		Set Variable [ $script_name ; Value: tScript::ScrName ] 
-		Set Variable [ $script_step_number ; Value: Case( Get ( ActivePortalRowNumber ) ; Get ( ActivePortalRowNumber ) ) ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tScr_tScriptStep" ] 
+# Portal ScriptSteps
+Set Variable [ $file_name ; Value: tScr_tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tScr_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tScr_tScriptStep::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tScr_tLayoutObject" ] 
+# Portal Layout Objects
+Set Variable [ $file_name ; Value: tScr_tLayoutObject::FileName ] 
+Set Variable [ $layout_name ; Value: tScr_tLayoutObject::LytName_cut ] 
+Set Variable [ $object_name ; Value: tScr_tLayoutObject::LytObjName ] 
+Else
+Set Variable [ $file_name ; Value: tScript::FileName ] 
+Set Variable [ $script_name ; Value: tScript::ScrName ] 
+Set Variable [ $script_step_number ; Value: Case( Get ( ActivePortalRowNumber ) ; Get ( ActivePortalRowNumber ) ) ] 
+End If
+# 
 Else If [ $LayoutTableName = "tScriptStep" ] 
-	Set Variable [ $file_name ; Value: tScriptStep::FileName ] 
-	Set Variable [ $script_name ; Value: tScriptStep::ScriptName_cut ] 
-	Set Variable [ $script_step_number ; Value: tScriptStep::ScriptStepNumber ] 
-	# 
+Set Variable [ $file_name ; Value: tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tScriptStep::ScriptStepNumber ] 
+# 
 Else If [ $LayoutTableName = "tValueList" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tVL_tField.Validation" ] 
-		Set Variable [ $file_name ; Value: tVL_tField.Validation::FileName ] 
-		Set Variable [ $table_name ; Value: tVL_tField.Validation::TableName_cut ] 
-		Set Variable [ $field_name ; Value: tVL_tField.Validation::FldName ] 
-		# 
-	Else If [ $ActiveTableName = "tVL_tLayoutObject" ] 
-		Set Variable [ $file_name ; Value: tVL_tLayoutObject::FileName ] 
-		Set Variable [ $layout_name ; Value: tVL_tLayoutObject::LytName_cut ] 
-		Set Variable [ $object_name ; Value: tVL_tLayoutObject::LytObjName ] 
-		# 
-	Else If [ $ActiveTableName = "tVL_tScriptStep" ] 
-		Set Variable [ $file_name ; Value: tVL_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tVL_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tVL_tScriptStep::ScriptStepNumber ] 
-		# 
-	Else If [ $ActiveTableName = "tVL_tValueList" ] 
-		Set Variable [ $file_name ; Value: tVL_tValueList::FileName ] 
-		Set Variable [ $value_list_name ; Value: tVL_tValueList::VLName ] 
-		# 
-	Else
-		Set Variable [ $file_name ; Value: tValueList::FileName ] 
-		Set Variable [ $value_list_name ; Value: tValueList::VLName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tVL_tField.Validation" ] 
+Set Variable [ $file_name ; Value: tVL_tField.Validation::FileName ] 
+Set Variable [ $table_name ; Value: tVL_tField.Validation::TableName_cut ] 
+Set Variable [ $field_name ; Value: tVL_tField.Validation::FldName ] 
+# 
+Else If [ $ActiveTableName = "tVL_tLayoutObject" ] 
+Set Variable [ $file_name ; Value: tVL_tLayoutObject::FileName ] 
+Set Variable [ $layout_name ; Value: tVL_tLayoutObject::LytName_cut ] 
+Set Variable [ $object_name ; Value: tVL_tLayoutObject::LytObjName ] 
+# 
+Else If [ $ActiveTableName = "tVL_tScriptStep" ] 
+Set Variable [ $file_name ; Value: tVL_tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tVL_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tVL_tScriptStep::ScriptStepNumber ] 
+# 
+Else If [ $ActiveTableName = "tVL_tValueList" ] 
+Set Variable [ $file_name ; Value: tVL_tValueList::FileName ] 
+Set Variable [ $value_list_name ; Value: tVL_tValueList::VLName ] 
+# 
+Else
+Set Variable [ $file_name ; Value: tValueList::FileName ] 
+Set Variable [ $value_list_name ; Value: tValueList::VLName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tLayout" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tLyt_tScriptStep" ] 
-		Set Variable [ $file_name ; Value: tLyt_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tLyt_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tLyt_tScriptStep::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tLayout::FileName ] 
-		Set Variable [ $layout_name ; Value: tLayout::LytName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tLyt_tScriptStep" ] 
+Set Variable [ $file_name ; Value: tLyt_tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tLyt_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tLyt_tScriptStep::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tLayout::FileName ] 
+Set Variable [ $layout_name ; Value: tLayout::LytName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tLayoutObject" ] 
-	Set Variable [ $file_name ; Value: tLayoutObject::FileName ] 
-	Set Variable [ $layout_name ; Value: tLayoutObject::LytName_cut ] 
-	Set Variable [ $object_name ; Value: tLayoutObject::LytObjName ] 
-	# 
+Set Variable [ $file_name ; Value: tLayoutObject::FileName ] 
+Set Variable [ $layout_name ; Value: tLayoutObject::LytName_cut ] 
+Set Variable [ $object_name ; Value: tLayoutObject::LytObjName ] 
+# 
 Else If [ $LayoutTableName = "tLayoutPart" ] 
-	Set Variable [ $file_name ; Value: tLayoutPart::FileName ] 
-	Set Variable [ $layout_name ; Value: tLayout::LytName ] 
-	Set Variable [ $layout_part_name ; Value: Case ( not IsEmpty ( tLayoutPart::PartName ) ; tLayoutPart::PartName ; tLayoutPart::PartType ) ] 
-	Set Variable [ $layout_part_number ; Value: Let( [ $$SQL = "SELECT " & "PrimaryKey" & "  FROM " & "tLayoutPart" & " WHERE " & "tLayoutPart.fkSolID" & "=?" & "   AND " & "tLayoutPart.FileName" & "=?" & "   AND " & "tLayoutPart.fkLytID" & "=?" ; vKey = tLayoutPart::PrimaryKey ; vKeys = ExecuteS… ] 
-	# 
+Set Variable [ $file_name ; Value: tLayoutPart::FileName ] 
+Set Variable [ $layout_name ; Value: tLayout::LytName ] 
+Set Variable [ $layout_part_name ; Value: Case ( not IsEmpty ( tLayoutPart::PartName ) ; tLayoutPart::PartName ; tLayoutPart::PartType ) ] 
+Set Variable [ $layout_part_number ; Value: Let( [ $$SQL = "SELECT " & "PrimaryKey" & "  FROM " & "tLayoutPart" & " WHERE " & "tLayoutPart.fkSolID" & "=?" & "   AND " & "tLayoutPart.FileName" & "=?" & "   AND " & "tLayoutPart.fkLytID" & "=?" ; vKey = tLayoutPart::PrimaryKey ; vKeys = ExecuteS… ] 
+# 
 Else If [ $LayoutTableName = "tCustomFunction" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tCF_tScriptStep_tScrStCalc" ] 
-		Set Variable [ $file_name ; Value: tCF_tScriptStep_tScrStCalc::FileName ] 
-		Set Variable [ $script_name ; Value: tCF_tScriptStep_tScrStCalc::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tCF_tScriptStep_tScrStCalc::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tCustomFunction::FileName ] 
-		Set Variable [ $custom_function_name ; Value: tCustomFunction::CfName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tCF_tScriptStep_tScrStCalc" ] 
+Set Variable [ $file_name ; Value: tCF_tScriptStep_tScrStCalc::FileName ] 
+Set Variable [ $script_name ; Value: tCF_tScriptStep_tScrStCalc::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tCF_tScriptStep_tScrStCalc::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tCustomFunction::FileName ] 
+Set Variable [ $custom_function_name ; Value: tCustomFunction::CfName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tCustomMenuSet" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tCustMenuSet_tLayout" ] 
-		Set Variable [ $file_name ; Value: tCustMenuSet_tLayout::FileName ] 
-		Set Variable [ $layout_name ; Value: tCustMenuSet_tLayout::LytName ] 
-	Else If [ $ActiveTableName = "tCustMenuSet_tScriptStep" ] 
-		Set Variable [ $file_name ; Value: tCustMenuSet_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tCustMenuSet_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tCustMenuSet_tScriptStep::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tCustomMenuSet::FileName ] 
-		Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSet::CMenSetName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tCustMenuSet_tLayout" ] 
+Set Variable [ $file_name ; Value: tCustMenuSet_tLayout::FileName ] 
+Set Variable [ $layout_name ; Value: tCustMenuSet_tLayout::LytName ] 
+Else If [ $ActiveTableName = "tCustMenuSet_tScriptStep" ] 
+Set Variable [ $file_name ; Value: tCustMenuSet_tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tCustMenuSet_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tCustMenuSet_tScriptStep::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tCustomMenuSet::FileName ] 
+Set Variable [ $custom_menu_set_name ; Value: tCustomMenuSet::CMenSetName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tFileReference" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tFileRef_tScriptStep" ] 
-		Set Variable [ $file_name ; Value: tFileRef_tScriptStep::FileName ] 
-		Set Variable [ $script_name ; Value: tFileRef_tScriptStep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tFileRef_tScriptStep_tScrStCalc.Calc" ] 
-		Set Variable [ $file_name ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::FileName ] 
-		Set Variable [ $script_name ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tFileRef_tScriptStep_tScrStCalc.Field" ] 
-		Set Variable [ $file_name ; Value: tFileRef_tScriptStep_tScrStCalc.Field::FileName ] 
-		Set Variable [ $script_name ; Value: tFileRef_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tFileReference::FileName ] 
-		Set Variable [ $external_data_source_name ; Value: tFileReference::FileRefName ] 
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tFileRef_tScriptStep" ] 
+Set Variable [ $file_name ; Value: tFileRef_tScriptStep::FileName ] 
+Set Variable [ $script_name ; Value: tFileRef_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tFileRef_tScriptStep_tScrStCalc.Calc" ] 
+Set Variable [ $file_name ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::FileName ] 
+Set Variable [ $script_name ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep_tScrStCalc.Calc::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tFileRef_tScriptStep_tScrStCalc.Field" ] 
+Set Variable [ $file_name ; Value: tFileRef_tScriptStep_tScrStCalc.Field::FileName ] 
+Set Variable [ $script_name ; Value: tFileRef_tScriptStep_tScrStCalc.Field::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tFileRef_tScriptStep_tScrStCalc.Field::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tFileReference::FileName ] 
+Set Variable [ $external_data_source_name ; Value: tFileReference::FileRefName ] 
+End If
+# 
 Else If [ $LayoutTableName = "tVariable" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tVarDep_tScriptStep.Decl" ] 
-		Set Variable [ $file_name ; Value: tVarDep_tScriptStep.Decl::FileName ] 
-		Set Variable [ $script_name ; Value: tVarDep_tScriptStep.Decl::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tVarDep_tScriptStep.Decl::ScriptStepNumber ] 
-	Else If [ $ActiveTableName = "tVar_tScriptStep_tVarDep" ] 
-		Set Variable [ $file_name ; Value: tVar_tScriptStep_tVarDep::FileName ] 
-		Set Variable [ $script_name ; Value: tVar_tScriptStep_tVarDep::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tVar_tScriptStep_tVarDep::ScriptStepNumber ] 
-	Else
-	End If
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tVarDep_tScriptStep.Decl" ] 
+Set Variable [ $file_name ; Value: tVarDep_tScriptStep.Decl::FileName ] 
+Set Variable [ $script_name ; Value: tVarDep_tScriptStep.Decl::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tVarDep_tScriptStep.Decl::ScriptStepNumber ] 
+Else If [ $ActiveTableName = "tVar_tScriptStep_tVarDep" ] 
+Set Variable [ $file_name ; Value: tVar_tScriptStep_tVarDep::FileName ] 
+Set Variable [ $script_name ; Value: tVar_tScriptStep_tVarDep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tVar_tScriptStep_tVarDep::ScriptStepNumber ] 
+Else
+End If
+# 
 Else If [ $LayoutTableName = "tObject" ] 
-	If [ 0 ] 
-	Else If [ $ActiveTableName = "tObjDep_tScriptStep.Step" ] 
-		Set Variable [ $file_name ; Value: tObjDep_tScriptStep.Step::FileName ] 
-		Set Variable [ $script_name ; Value: tObjDep_tScriptStep.Step::ScriptName_cut ] 
-		Set Variable [ $script_step_number ; Value: tObjDep_tScriptStep.Step::ScriptStepNumber ] 
-	Else
-		Set Variable [ $file_name ; Value: tObject::FileName ] 
-		Set Variable [ $object_name ; Value: tObject::ObjName ] 
-	End If
-	# 
-	# 
+If [ 0 ] 
+Else If [ $ActiveTableName = "tObjDep_tScriptStep.Step" ] 
+Set Variable [ $file_name ; Value: tObjDep_tScriptStep.Step::FileName ] 
+Set Variable [ $script_name ; Value: tObjDep_tScriptStep.Step::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tObjDep_tScriptStep.Step::ScriptStepNumber ] 
+Else
+Set Variable [ $file_name ; Value: tObject::FileName ] 
+Set Variable [ $object_name ; Value: tObject::ObjName ] 
+End If
+# 
+# 
+Else If [ $LayoutTableName = "tVariableDependency" ] 
+If [ 0 ] 
+Else
+Set Variable [ $file_name ; Value: tVarDep_tScriptStep::FileName ] 
+// Set Variable [ $script_id ; Value: tVariableDependency::fkScrID ] 
+Set Variable [ $script_name ; Value: tVarDep_tScriptStep::ScriptName_cut ] 
+Set Variable [ $script_step_number ; Value: tVariableDependency::fkScrStID ] 
+End If
+# 
+# 
 End If
 # 
 # ^^^^^
@@ -399,7 +428,10 @@ Set Variable [ $fmide_parameters ; Value: While([ ¢fmide_parameter_names = $fmi
 Set Variable [ $fmide_url ; Value: $protocol & "://" & $server_address & "/" & GetAsURLEncoded ( $file_name ) & "?script=fmIDE" & $fmide_parameters ] 
 # 
 If [ not $get_fmide_url ] 
-	Open URL [ With dialog: Off ; $fmide_url ] 
+Open URL [ With dialog: Off ; $fmide_url ] 
+If [ Get ( LastError ) ] 
+Show Custom Dialog [ "Error " & Get( LastError ) & " " & Get ( LastErrorDetail ) ] 
+End If
 End If
 # 
 Exit Script [ Text Result: JSONSetElement ( "{}" ; "fmide_url" ; $fmide_url ; JSONString ) ] 
