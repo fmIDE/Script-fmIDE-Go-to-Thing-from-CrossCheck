@@ -24,7 +24,7 @@ Script "fmIDE-Go to Thing" ==========================================
 
 # @author https://github.com/mrwatson-de
 
-# 20240202 @mrwatson-de Version 0.9 - Added Layout Fields
+# 20240202 @mrwatson-de Version 0.9.1 - Added Layout Fields - and Field > Layout Field
 # 20240104 @mrwatson-de Version 0.8 - Added `Table > Script Step Calculation` - Added `Table > Script Step Target Field` - Improved comment doc and added link to raw file
 # 20230509 @mrwatson-de Version 0.7.1 - Added dialog to report call-error
 # 20230314 @mrwatson-de Version 0.7 - Added Field > LayoutObjects
@@ -208,6 +208,7 @@ Else If [ $LayoutTableName = "tField" ]
 		Set Variable [ $file_name ; Value: tField_tLayoutObject::FileName ]
 		Set Variable [ $layout_name ; Value: tField_tLayoutObject::LytName_cut ]
 		Set Variable [ $object_name ; Value: tField_tLayoutObject::LytObjName ]
+		Set Variable [ $layout_field_name ; Value: tField_tLayoutObject::LytObjFieldObjFieldTOName & "::" & tField_tLayoutObject::LytObjFieldObjFieldName ]
 	Else
 		Set Variable [ $file_name ; Value: tField::FileName ]
 		Set Variable [ $table_name ; Value: tField::TableName_cut ]
@@ -306,7 +307,7 @@ Else If [ $LayoutTableName = "tLayoutObject" ]
 	Set Variable [ $file_name ; Value: tLayoutObject::FileName ]
 	Set Variable [ $layout_name ; Value: tLayoutObject::LytName_cut ]
 	Set Variable [ $object_name ; Value: tLayoutObject::LytObjName ]
-	Set Variable [ $layout_field_name ; Value: tLayoutObject::LytObjFieldObjFieldName ]
+	Set Variable [ $layout_field_name ; Value: tLayoutObject::LytObjFieldObjFieldTOName & "::" & tLayoutObject::LytObjFieldObjFieldName ]
 	
 Else If [ $LayoutTableName = "tLayoutPart" ]
 	Set Variable [ $file_name ; Value: tLayoutPart::FileName ]
