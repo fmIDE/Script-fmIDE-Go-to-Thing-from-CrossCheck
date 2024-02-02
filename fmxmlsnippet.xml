@@ -21,7 +21,7 @@
 	<Step enable="True" id="89" name="# (comment)"></Step>
 	<Step enable="True" id="89" name="# (comment)"><Text>@author https://github.com/mrwatson-de</Text></Step>
 	<Step enable="True" id="89" name="# (comment)"></Step>
-	<Step enable="True" id="89" name="# (comment)"><Text>20240202 @mrwatson-de Version 0.9&#13;- Added Layout Fields</Text></Step>
+	<Step enable="True" id="89" name="# (comment)"><Text>20240202 @mrwatson-de Version 0.9.1&#13;- Added Layout Fields&#13;- and Field &gt; Layout Field</Text></Step>
 	<Step enable="True" id="89" name="# (comment)"><Text>20240104 @mrwatson-de Version 0.8&#13;- Added `Table &gt; Script Step Calculation`&#13;- Added `Table &gt; Script Step Target Field`&#13;- Improved comment doc and added link to raw file</Text></Step>
 	<Step enable="True" id="89" name="# (comment)"><Text>20230509 @mrwatson-de Version 0.7.1&#13;- Added dialog to report call-error</Text></Step>
 	<Step enable="True" id="89" name="# (comment)"><Text>20230314 @mrwatson-de Version 0.7&#13;- Added Field &gt; LayoutObjects</Text></Step>
@@ -327,6 +327,7 @@ $ActiveTableName = "tTbl_tScriptStep_tScrStCalc.Calc"]]></Calculation></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tField_tLayoutObject::FileName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$file_name</Name></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tField_tLayoutObject::LytName_cut]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$layout_name</Name></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tField_tLayoutObject::LytObjName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$object_name</Name></Step>
+	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tField_tLayoutObject::LytObjFieldObjFieldTOName & "::" & tField_tLayoutObject::LytObjFieldObjFieldName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$layout_field_name</Name></Step>
 	<Step enable="True" id="69" name="Else"></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tField::FileName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$file_name</Name></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tField::TableName_cut]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$table_name</Name></Step>
@@ -425,7 +426,7 @@ $ActiveTableName = "tTbl_tScriptStep_tScrStCalc.Calc"]]></Calculation></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tLayoutObject::FileName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$file_name</Name></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tLayoutObject::LytName_cut]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$layout_name</Name></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tLayoutObject::LytObjName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$object_name</Name></Step>
-	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tLayoutObject::LytObjFieldObjFieldName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$layout_field_name</Name></Step>
+	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tLayoutObject::LytObjFieldObjFieldTOName & "::" & tLayoutObject::LytObjFieldObjFieldName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$layout_field_name</Name></Step>
 	<Step enable="True" id="89" name="# (comment)"></Step>
 	<Step enable="True" id="125" name="Else If"><Calculation><![CDATA[$LayoutTableName = "tLayoutPart"]]></Calculation></Step>
 	<Step enable="True" id="141" name="Set Variable"><Value><Calculation><![CDATA[tLayoutPart::FileName]]></Calculation></Value><Repetition><Calculation><![CDATA[1]]></Calculation></Repetition><Name>$file_name</Name></Step>
